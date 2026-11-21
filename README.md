@@ -88,7 +88,7 @@ npm run typecheck
 cd client
 npm test
 ```
-*Runs component tests across ProductCard, SearchBar, EnquiryForm, ErrorBanner, HomePage, CategoryPage, and SearchResultsPage.*
+*Runs 28 component and interaction tests across ProductCard, SearchBar (including debounced suggestions & keyboard nav), EnquiryForm, ErrorBanner, HomePage, CategoryPage, and SearchResultsPage.*
 
 ```bash
 # To run type checking
@@ -104,7 +104,11 @@ npm run typecheck
    - Category exploration cards to browse specific departments.
 2. **Category Pages (`/categories/:name`)**:
    - Displays **Top Rated in this Category** (up to 3 products) followed by **More Products** for that category.
-3. **Search (`/search?q=...`)**:
+3. **Search & Real-time Suggestions (`/search?q=...`)**:
+   - Amazon-style real-time dropdown modal on input (debounced by 300ms after 3+ characters).
+   - Shows product thumbnails, titles, and prices with direct navigation to the product detail page on click.
+   - Full keyboard accessibility (Arrow Up/Down navigation, Enter selection, Escape to dismiss).
+   - Pressing "Search" CTA or Enter with no item selected navigates to the dedicated full search results page.
    - Server-side case-insensitive search across product title and description.
    - Handles empty queries, zero results, and special characters.
 4. **Product Detail Page (`/products/:id`)**:
