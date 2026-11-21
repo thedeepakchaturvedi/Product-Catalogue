@@ -1,0 +1,29 @@
+# Node
+node_modules/
+dist/
+build/
+.npm/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Testing & Coverage
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
