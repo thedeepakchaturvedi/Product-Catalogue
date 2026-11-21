@@ -191,7 +191,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             }
           }}
           placeholder={placeholder}
-          className={`${styles.input} ${isDropdownVisible ? styles.inputOpen : ""}`}
+          className={styles.input}
           maxLength={200}
           autoComplete="off"
           aria-autocomplete="list"
