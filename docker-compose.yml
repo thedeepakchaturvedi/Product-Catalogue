@@ -1,0 +1,43 @@
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025"   # SMTP server
+      - "8025:8025"   # Web UI
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: catalogue-server
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - FAKE_STORE_API_URL=https://fakestoreapi.com
+      - PRODUCT_CACHE_TTL_MS=300000
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_SECURE=false
+      - EMAIL_FROM=noreply@catalogue.local
+      - SALES_EMAIL=sales@example.com
+      - CORS_ORIGIN=http://localhost:5173
+      - NODE_ENV=development
+    depends_on:
+      - mailpit
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: catalogue-client
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3001/api/v1
+    depends_on:
+      - server
+    restart: unless-stopped
