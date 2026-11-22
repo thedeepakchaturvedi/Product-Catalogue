@@ -1,6 +1,7 @@
 import { config } from "./config/index.js";
 import { Cache } from "./providers/cache.js";
 import { FakeStoreProductProvider } from "./providers/productProvider.js";
+import { CachedProductProvider } from "./providers/cachedProductProvider.js";
 import { NodemailerEmailProvider } from "./providers/emailProvider.js";
 import { ProductService } from "./services/productService.js";
 import { EnquiryService } from "./services/enquiryService.js";
@@ -10,18 +11,23 @@ import { createApp } from "./app.js";
 
 async function main(): Promise<void> {
   const cache = new Cache();
-  const productProvider = new FakeStoreProductProvider(config.fakeStoreApiUrl);
+  const rawProductProvider = new FakeStoreProductProvider(config.fakeStoreApiUrl);
+  
+  // Decorate the raw provider with in-memory TTL caching (Decorator Pattern)
+  const productProvider = new CachedProductProvider(
+    rawProductProvider,
+    cache,
+    config.productCacheTtlMs
+  );
+
   const emailProvider = new NodemailerEmailProvider({
     host: config.smtpHost,
     port: config.smtpPort,
     secure: config.smtpSecure,
   });
 
-  const productService = new ProductService(
-    productProvider,
-    cache,
-    config.productCacheTtlMs
-  );
+  // ProductService depends purely on ProductProvider — zero caching knowledge required
+  const productService = new ProductService(productProvider);
 
   const enquiryService = new EnquiryService(emailProvider, productService, {
     emailFrom: config.emailFrom,

@@ -1,14 +1,7 @@
 import type { Product, CategoryProducts, ProductProvider } from "../types/index.js";
-import type { Cache } from "../providers/cache.js";
-
-const CACHE_KEY_PRODUCTS = "all_products";
 
 export class ProductService {
-  constructor(
-    private readonly provider: ProductProvider,
-    private readonly cache: Cache,
-    private readonly cacheTtlMs: number
-  ) {}
+  constructor(private readonly provider: ProductProvider) {}
 
   private compareProducts(a: Product, b: Product): number {
     // 1. rating.rate desc
@@ -24,14 +17,7 @@ export class ProductService {
   }
 
   async getAllProducts(): Promise<Product[]> {
-    const cached = this.cache.get<Product[]>(CACHE_KEY_PRODUCTS);
-    if (cached) {
-      return cached;
-    }
-
-    const products = await this.provider.getAllProducts();
-    this.cache.set(CACHE_KEY_PRODUCTS, products, this.cacheTtlMs);
-    return products;
+    return this.provider.getAllProducts();
   }
 
   async getTopRated(limit = 5): Promise<Product[]> {

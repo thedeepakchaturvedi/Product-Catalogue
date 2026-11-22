@@ -7,6 +7,7 @@ import { EnquiryController } from "../../src/controllers/enquiryController.js";
 import { ProductService } from "../../src/services/productService.js";
 import { EnquiryService } from "../../src/services/enquiryService.js";
 import { Cache } from "../../src/providers/cache.js";
+import { CachedProductProvider } from "../../src/providers/cachedProductProvider.js";
 import type { Product, ProductProvider, EmailProvider } from "../../src/types/index.js";
 
 const mockProducts: Product[] = [
@@ -54,7 +55,8 @@ describe("Product Routes Integration Tests", () => {
 
   beforeEach(() => {
     const cache = new Cache();
-    const productService = new ProductService(new MockProductProvider(), cache, 5000);
+    const productProvider = new CachedProductProvider(new MockProductProvider(), cache, 5000);
+    const productService = new ProductService(productProvider);
     const enquiryService = new EnquiryService(mockEmailProvider, productService, {
       emailFrom: "noreply@catalogue.local",
       salesEmail: "sales@example.com",

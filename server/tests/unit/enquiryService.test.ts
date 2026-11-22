@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { EnquiryService } from "../../src/services/enquiryService.js";
 import { ProductService } from "../../src/services/productService.js";
-import { Cache } from "../../src/providers/cache.js";
 import type { EmailProvider, Product, ProductProvider, SendEmailOptions } from "../../src/types/index.js";
 import { ProviderError } from "../../src/types/index.js";
 
@@ -23,14 +22,14 @@ class MockProductProvider implements ProductProvider {
 
 describe("EnquiryService", () => {
   it("composes and sends email when product exists", async () => {
-    let capturedOptions: SendEmailOptions | null = null;
+    const capturedEmails: SendEmailOptions[] = [];
     const mockEmailProvider: EmailProvider = {
       async sendEmail(options: SendEmailOptions): Promise<void> {
-        capturedOptions = options;
+        capturedEmails.push(options);
       },
     };
 
-    const productService = new ProductService(new MockProductProvider(), new Cache(), 5000);
+    const productService = new ProductService(new MockProductProvider());
     const service = new EnquiryService(mockEmailProvider, productService, {
       emailFrom: "noreply@catalogue.local",
       salesEmail: "sales@example.com",
@@ -46,26 +45,27 @@ describe("EnquiryService", () => {
     });
 
     expect(response.message).toContain("Thank you");
-    expect(capturedOptions).not.toBeNull();
-    expect(capturedOptions?.to).toBe("sales@example.com");
-    expect(capturedOptions?.from).toBe("noreply@catalogue.local");
-    expect(capturedOptions?.subject).toBe("Product Enquiry: Fjallraven Backpack");
-    expect(capturedOptions?.html).toContain("Jane Doe");
-    expect(capturedOptions?.html).toContain("jane@example.com");
-    expect(capturedOptions?.html).toContain("+1 555-0199");
-    expect(capturedOptions?.html).toContain("I would like to order 10 units.");
-    expect(capturedOptions?.html).toContain("$109.95");
+    expect(capturedEmails).toHaveLength(1);
+    const [options] = capturedEmails;
+    expect(options!.to).toBe("sales@example.com");
+    expect(options!.from).toBe("noreply@catalogue.local");
+    expect(options!.subject).toBe("Product Enquiry: Fjallraven Backpack");
+    expect(options!.html).toContain("Jane Doe");
+    expect(options!.html).toContain("jane@example.com");
+    expect(options!.html).toContain("+1 555-0199");
+    expect(options!.html).toContain("I would like to order 10 units.");
+    expect(options!.html).toContain("$109.95");
   });
 
   it("escapes HTML to prevent injection in emails", async () => {
-    let capturedOptions: SendEmailOptions | null = null;
+    const capturedEmails: SendEmailOptions[] = [];
     const mockEmailProvider: EmailProvider = {
       async sendEmail(options: SendEmailOptions): Promise<void> {
-        capturedOptions = options;
+        capturedEmails.push(options);
       },
     };
 
-    const productService = new ProductService(new MockProductProvider(), new Cache(), 5000);
+    const productService = new ProductService(new MockProductProvider());
     const service = new EnquiryService(mockEmailProvider, productService, {
       emailFrom: "noreply@catalogue.local",
       salesEmail: "sales@example.com",
@@ -79,20 +79,22 @@ describe("EnquiryService", () => {
       message: "<img src=x onerror=alert(1)>",
     });
 
-    expect(capturedOptions?.html).not.toContain("<script>");
-    expect(capturedOptions?.html).toContain("&lt;script&gt;");
-    expect(capturedOptions?.html).toContain("&lt;img src=x onerror=alert(1)&gt;");
+    expect(capturedEmails).toHaveLength(1);
+    const [options] = capturedEmails;
+    expect(options!.html).not.toContain("<script>");
+    expect(options!.html).toContain("&lt;script&gt;");
+    expect(options!.html).toContain("&lt;img src=x onerror=alert(1)&gt;");
   });
 
   it("handles optional phone gracefully", async () => {
-    let capturedOptions: SendEmailOptions | null = null;
+    const capturedEmails: SendEmailOptions[] = [];
     const mockEmailProvider: EmailProvider = {
       async sendEmail(options: SendEmailOptions): Promise<void> {
-        capturedOptions = options;
+        capturedEmails.push(options);
       },
     };
 
-    const productService = new ProductService(new MockProductProvider(), new Cache(), 5000);
+    const productService = new ProductService(new MockProductProvider());
     const service = new EnquiryService(mockEmailProvider, productService, {
       emailFrom: "noreply@catalogue.local",
       salesEmail: "sales@example.com",
@@ -106,7 +108,9 @@ describe("EnquiryService", () => {
       message: "Interested in this item.",
     });
 
-    expect(capturedOptions?.html).toContain("Not provided");
+    expect(capturedEmails).toHaveLength(1);
+    const [options] = capturedEmails;
+    expect(options!.html).toContain("Not provided");
   });
 
   it("throws PRODUCT_NOT_FOUND when product does not exist", async () => {
@@ -114,7 +118,7 @@ describe("EnquiryService", () => {
       async sendEmail(): Promise<void> {},
     };
 
-    const productService = new ProductService(new MockProductProvider(), new Cache(), 5000);
+    const productService = new ProductService(new MockProductProvider());
     const service = new EnquiryService(mockEmailProvider, productService, {
       emailFrom: "noreply@catalogue.local",
       salesEmail: "sales@example.com",
@@ -138,7 +142,7 @@ describe("EnquiryService", () => {
       },
     };
 
-    const productService = new ProductService(new MockProductProvider(), new Cache(), 5000);
+    const productService = new ProductService(new MockProductProvider());
     const service = new EnquiryService(mockEmailProvider, productService, {
       emailFrom: "noreply@catalogue.local",
       salesEmail: "sales@example.com",

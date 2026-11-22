@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { ProductService } from "../../src/services/productService.js";
-import { Cache } from "../../src/providers/cache.js";
 import type { Product, ProductProvider } from "../../src/types/index.js";
 
 const mockProducts: Product[] = [
@@ -78,11 +77,9 @@ class MockProductProvider implements ProductProvider {
 
 describe("ProductService", () => {
   let service: ProductService;
-  let cache: Cache;
 
   beforeEach(() => {
-    cache = new Cache();
-    service = new ProductService(new MockProductProvider(mockProducts), cache, 10000);
+    service = new ProductService(new MockProductProvider(mockProducts));
   });
 
   it("fetches top-rated products with correct tie-breaking order", async () => {
@@ -177,23 +174,5 @@ describe("ProductService", () => {
   it("returns empty array for empty or whitespace-only search query", async () => {
     const results = await service.search("   ");
     expect(results).toHaveLength(0);
-  });
-
-  it("uses cached products on subsequent calls", async () => {
-    let callCount = 0;
-    const provider: ProductProvider = {
-      async getAllProducts() {
-        callCount++;
-        return mockProducts;
-      },
-    };
-
-    const cachedService = new ProductService(provider, new Cache(), 5000);
-    await cachedService.getAllProducts();
-    await cachedService.getTopRated(2);
-    await cachedService.getCategories();
-    await cachedService.getById(1);
-
-    expect(callCount).toBe(1);
   });
 });
